@@ -7,8 +7,7 @@ module.exports = () => ({
   devtool: 'source-map',
   cache: true,
   entry: {
-    foreground: root('src', 'foreground.ts'),
-    background: root('src', 'background.ts'),
+    foreground: root('src', 'index.ts'),
   },
   output: {
     path: root('dist'),
@@ -46,5 +45,5 @@ module.exports = () => ({
         ]
       },
     ],
-  }
+  },
 })

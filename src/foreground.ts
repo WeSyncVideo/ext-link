@@ -57,7 +57,7 @@ function createReplaceReducer <S, A extends Action> (): ReplaceReducer<S, A> {
   throw new Error('store#replaceReducer is not a supported operation in ext-link')
 }
 
-function link <S, A extends Action> (api: API): Store<S, A> {
+function getStoreLink <S, A extends Action> (api: API): Store<S, A> {
   const { runtime: { sendMessage, onMessage } } = api
   const context: Context<S> = {
     sendMessage: bind(api)(sendMessage),
@@ -78,4 +78,4 @@ function link <S, A extends Action> (api: API): Store<S, A> {
   return store
 }
 
-export default link
+export default getStoreLink
