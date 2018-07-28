@@ -1,9 +1,7 @@
-import { API, Store, Action, Thunks } from './types'
-import { MESSAGE_TYPE, TARGET_FOREGROUND, isThunkDescriptor } from './common'
+import { API, Store, Action } from './types'
+import { MESSAGE_TYPE, TARGET_FOREGROUND } from './common'
 
-// TODO: Consider how modules will impact thunks
-
-function createLink <P, R, S, E, A extends Action> (api: API, store: Store<S, A>, thunks: Thunks<P, R, S, E, A>) {
+function createLink <S, A extends Action> (api: API, store: Store<S, A>) {
   const { runtime: { sendMessage, onMessage } } = api
 
   store.subscribe(() => {
@@ -25,11 +23,7 @@ function createLink <P, R, S, E, A extends Action> (api: API, store: Store<S, A>
       message.__action__ !== null
     ) {
       const { action } = message
-      if (isThunkDescriptor(action)) {
-        store.dispatch(thunks[message.thunkName](message.payload))
-      } else {
-        store.dispatch(action)
-      }
+      store.dispatch(action)
     }
   })
 }

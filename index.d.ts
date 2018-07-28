@@ -1,3 +1,2 @@
-export * from './dist/background'
-export * from './dist/foreground'
+export * from './dist/index'
 export * from './dist/types'
