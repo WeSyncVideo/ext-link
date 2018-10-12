@@ -1,19 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "es2015",
     "module": "commonjs",
-    "importHelpers": true,
+    "outDir": "dist",
     "strict": true,
     "sourceMap": true,
     "declaration": true,
-    "declarationDir": "declarations",
-    "baseUrl": ".",
-    "lib": [
-      "es2016"
-    ]
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "baseUrl": "."
   },
   "include": [
     "./src/**/*.ts",
     "./test/**/*.ts"
+  ],
+  "exclude": [
+    "./node_modules"
   ]
 }

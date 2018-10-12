@@ -1,22 +1,22 @@
-import { MESSAGE_TYPE, bind, TARGET_FOREGROUND, TARGET_BACKGROUND } from './common'
+import { MESSAGE_TYPE, INIT_TYPE, TARGET_FOREGROUND, TARGET_BACKGROUND } from './common'
 import { API, GetState, Context, Subscribe, Dispatch, Action, Store, ReplaceReducer } from './types'
 
 function onMessageListener <S> (this: Context<S>, message: any) {
-  if (
-    typeof message === 'object' &&
-    message !== null &&
-    typeof message.__type__ === 'string' &&
-    typeof message.__target__ === 'string' &&
-    message.__type__ === MESSAGE_TYPE &&
-    message.__target__ === TARGET_FOREGROUND
-  ) {
-    // Reassign state
-    this.prevState = this.state
-    this.state = message.__state__
+  if (typeof message !== 'object') return
+  if (message === null) return
+  if (typeof message.__type__ !== 'string') return
+  if (typeof message.__target__ !== 'string') return
+  if (message.__type__ !== MESSAGE_TYPE) return
+  if (message.__target__ !== TARGET_FOREGROUND) return
+  if (typeof message.__state__ !== 'object') return
+  if (message.__state__ === null) return
 
-    // Notify listeners async
-    this.listeners.forEach(l => setTimeout(() => l(), 0))
-  }
+  // Reassign state
+  this.prevState = this.state
+  this.state = message.__state__
+
+  // Notify listeners async
+  this.listeners.forEach(l => setTimeout(() => l(), 0))
 }
 
 function createDispatch <S, A extends Action> (context: Context<S>): Dispatch<A> {
@@ -30,7 +30,7 @@ function createDispatch <S, A extends Action> (context: Context<S>): Dispatch<A>
     return action
   }
 
-  return bind(context)(dispatch)
+  return dispatch.bind(context)
 }
 
 function createSubscribe <S> (context: Context<S>): Subscribe<S> {
@@ -42,7 +42,7 @@ function createSubscribe <S> (context: Context<S>): Subscribe<S> {
     }
   }
 
-  return bind(context)(subscribe)
+  return subscribe.bind(context)
 }
 
 function createGetState <S> (context: Context<S>): GetState<S> {
@@ -50,32 +50,46 @@ function createGetState <S> (context: Context<S>): GetState<S> {
     return this.state
   }
 
-  return bind(context)(getState)
+  return getState.bind(context)
 }
 
 function createReplaceReducer <S, A extends Action> (): ReplaceReducer<S, A> {
   throw new Error('store#replaceReducer is not a supported operation in ext-link')
 }
 
-function getStoreLink <S, A extends Action> (api: API): Store<S, A> {
-  const { runtime: { sendMessage, onMessage } } = api
-  const context: Context<S> = {
-    sendMessage: bind(api)(sendMessage),
-    state: {} as S,
-    prevState: {} as S,
-    listeners: [],
-  }
+async function getStoreLink <S, A extends Action> (api: API): Promise<Store<S, A>> {
+  return new Promise((resolve) => {
+    const { runtime: { sendMessage } } = api
+    sendMessage(
+      {
+        __type__: INIT_TYPE,
+        __target__: TARGET_BACKGROUND,
+      },
+      ({ __initialState__ }) => {
+        resolve(__initialState__)
+      },
+    )
+  })
+    .then((initialState) => {
+      const { runtime: { sendMessage, onMessage } } = api
+      const context: Context<S> = {
+        sendMessage,
+        state: initialState as S,
+        prevState: {} as S,
+        listeners: [],
+      }
 
-  const store = {
-    dispatch: createDispatch(context),
-    subscribe: createSubscribe(context),
-    getState: createGetState(context),
-    replaceReducer: createReplaceReducer<S, A>(),
-  }
+      const store = {
+        dispatch: createDispatch(context),
+        subscribe: createSubscribe(context),
+        getState: createGetState(context),
+        replaceReducer: createReplaceReducer<S, A>(),
+      }
 
-  onMessage.addListener(bind(context)(onMessageListener))
+      onMessage.addListener(onMessageListener.bind(context))
 
-  return store
+      return store
+    })
 }
 
 export default getStoreLink
