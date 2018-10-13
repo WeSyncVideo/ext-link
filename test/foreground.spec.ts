@@ -2,14 +2,16 @@ import { Store, Action } from 'redux'
 import { expect } from 'chai'
 
 import createLink from '../src/foreground'
-import createMock from './mock/chrome'
+import createMock, { Mock } from './mock/api'
 
 interface MockState {
   value: string
 }
 
 const initialState = Object.freeze({
-  value: 'hello',
+  __initialState__: {
+    value: 'hello',
+  },
 })
 
 // TODO: Build mock action type to test type correctness
@@ -22,11 +24,12 @@ describe('foreground', function () {
 
   describe('link', function () {
     let link: Store<MockState, MockAction>
-    let chromeMock: typeof chrome
+    let mock: Mock
 
     beforeEach(async function () {
-      chromeMock = createMock(initialState)
-      link = await createLink<MockState, MockAction>(chromeMock)
+      mock = createMock()
+      mock.prepareResponse(initialState)
+      link = await createLink<MockState, MockAction>(mock.api)
     })
 
     it('should be an object', async function () {
@@ -43,6 +46,10 @@ describe('foreground', function () {
       it('is function on link', async function () {
         expect(dispatch).be.a('function')
       })
+
+      it('should send message containing action to background', async function () {
+
+      })
     })
 
     describe('subscribe', function () {
@@ -55,6 +62,10 @@ describe('foreground', function () {
       it('is function on link', async function () {
         expect(subscribe).be.a('function')
       })
+
+      it('is called when state is updated', async function () {
+
+      })
     })
 
     describe('getState', function () {
@@ -66,6 +77,20 @@ describe('foreground', function () {
 
       it('is function on link', async function () {
         expect(getState).be.a('function')
+      })
+
+      it('should retrieve initial state', async function () {
+        // act
+        const state = getState()
+
+        // assert
+        expect(state).be.a('object')
+        expect(state).to.have.property('value', 'hello')
+        expect(state).to.not.have.property('random')
+      })
+
+      it('should retrieve updated state', async function () {
+
       })
     })
 
@@ -80,7 +105,7 @@ describe('foreground', function () {
         expect(replaceReducer).be.a('function')
       })
 
-      it('should throw error', async function () {
+      it('should throw error (not supported operation)', async function () {
         let failed = false
         try {
           (replaceReducer as any)()
