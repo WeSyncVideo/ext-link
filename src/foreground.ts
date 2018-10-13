@@ -1,5 +1,5 @@
 import { MESSAGE_TYPE, INIT_TYPE, TARGET_FOREGROUND, TARGET_BACKGROUND } from './common'
-import { API, GetState, Context, Subscribe, Dispatch, Action, Store, ReplaceReducer } from './types'
+import { API, GetState, Context, Subscribe, Dispatch, Action, Store, ReplaceReducer, Reducer } from './types'
 
 function onMessageListener <S> (this: Context<S>, message: any) {
   if (typeof message !== 'object') return
@@ -54,10 +54,12 @@ function createGetState <S> (context: Context<S>): GetState<S> {
 }
 
 function createReplaceReducer <S, A extends Action> (): ReplaceReducer<S, A> {
-  throw new Error('store#replaceReducer is not a supported operation in ext-link')
+  return (_: Reducer<S, A>) => {
+    throw new Error('store#replaceReducer is not a supported operation in ext-link')
+  }
 }
 
-async function getStoreLink <S, A extends Action> (api: API): Promise<Store<S, A>> {
+async function createLink <S, A extends Action> (api: API): Promise<Store<S, A>> {
   return new Promise((resolve) => {
     const { runtime: { sendMessage } } = api
     sendMessage(
@@ -92,4 +94,4 @@ async function getStoreLink <S, A extends Action> (api: API): Promise<Store<S, A
     })
 }
 
-export default getStoreLink
+export default createLink

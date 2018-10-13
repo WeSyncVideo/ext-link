@@ -4,7 +4,7 @@ import {
   Dispatch as ReduxDispatch,
   Unsubscribe,
   AnyAction,
-  Reducer,
+  Reducer as ReduxReducer,
 } from 'redux'
 
 export type Action = ReduxAction
@@ -18,6 +18,8 @@ export type Subscribe <S> = (this: Context<S>, listener: Listener) => Unsubscrib
 export type GetState <S> = (this: Context<S>) => S
 
 export type Dispatch <A extends Action> = ReduxDispatch<A>
+
+export type Reducer<S = any, A extends Action = AnyAction> = ReduxReducer<S, A>
 
 export type ReplaceReducer <S = any, A extends Action = AnyAction> = (nextReducer: Reducer<S, A>) => void
 
