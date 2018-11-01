@@ -55,43 +55,50 @@ function createGetState <S> (context: Context<S>): GetState<S> {
 
 function createReplaceReducer <S, A extends Action> (): ReplaceReducer<S, A> {
   return (_: Reducer<S, A>) => {
-    throw new Error('store#replaceReducer is not a supported operation in ext-link')
+    throw new Error('store#replaceReducer is not currently a supported operation in ext-link')
   }
 }
 
 async function createLink <S, A extends Action> (api: API): Promise<Store<S, A>> {
-  return new Promise((resolve) => {
-    const { runtime: { sendMessage } } = api
-    sendMessage(
-      {
-        __type__: INIT_TYPE,
-        __target__: TARGET_BACKGROUND,
-      },
-      ({ __initialState__ }) => {
-        resolve(__initialState__)
-      },
-    )
+  let store: Store<S, A>
+  const { runtime: { sendMessage, onMessage, getBackgroundPage } } = api
+  const background = await new Promise<any>((resolve) => {
+    getBackgroundPage(bg => resolve(bg))
   })
-    .then((initialState) => {
-      const { runtime: { sendMessage, onMessage } } = api
-      const context: Context<S> = {
-        sendMessage,
-        state: initialState as S,
-        prevState: {} as S,
-        listeners: [],
-      }
-
-      const store = {
-        dispatch: createDispatch(context),
-        subscribe: createSubscribe(context),
-        getState: createGetState(context),
-        replaceReducer: createReplaceReducer<S, A>(),
-      }
-
-      onMessage.addListener(onMessageListener.bind(context))
-
-      return store
+  if (background) {
+    // For performance reasons bypass messaging if possible
+    store = background.__store__
+  } else {
+    const initialState = await new Promise((resolve) => {
+      sendMessage(
+        {
+          __type__: INIT_TYPE,
+          __target__: TARGET_BACKGROUND,
+        },
+        ({ __initialState__ }) => {
+          resolve(__initialState__)
+        },
+      )
     })
+
+    const context: Context<S> = {
+      sendMessage,
+      state: initialState as S,
+      prevState: {} as S,
+      listeners: [],
+    }
+
+    store = {
+      dispatch: createDispatch(context),
+      subscribe: createSubscribe(context),
+      getState: createGetState(context),
+      replaceReducer: createReplaceReducer<S, A>(),
+    }
+
+    onMessage.addListener(onMessageListener.bind(context))
+  }
+
+  return store
 }
 
 export default createLink

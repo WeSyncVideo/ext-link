@@ -7,14 +7,14 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "clean": "yarn rimraf dist/",
-    "clean:test": "yarn rimraf dist/test/",
-    "build": "yarn clean && yarn tsc && yarn clean:test",
-    "lint": "yarn lint:src && yarn lint:test",
-    "lint:src": "yarn tslint \"src/**/*.ts\"",
-    "lint:test": "yarn tslint \"test/**/*.ts\"",
-    "test": "yarn mocha ./test/**/*.spec.ts",
-    "tslint": "./node_modules/.bin/tslint -c tslint.json -p tsconfig.json"
+    "clean": "rimraf dist/",
+    "clean:test": "rimraf dist/test/",
+    "build": "npm run clean && tsc && npm run clean:test && mv dist/src/* dist/ && rmdir dist/src",
+    "lint": "npm run lint:src && npm run lint:test",
+    "lint:src": "npm run tslint -- \"src/**/*.ts\"",
+    "lint:test": "npm run tslint -- \"test/**/*.ts\"",
+    "test": "mocha ./test/**/*.spec.ts",
+    "tslint": "tslint -c tslint.json -p tsconfig.json"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",

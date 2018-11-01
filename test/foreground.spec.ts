@@ -9,8 +9,13 @@ interface MockState {
 }
 
 const initialState = Object.freeze({
-  __initialState__: {
-    value: 'hello',
+  value: 'hello',
+})
+
+const action = Object.freeze({
+  type: 'test',
+  payload: {
+    value: 'aValue',
   },
 })
 
@@ -28,7 +33,7 @@ describe('foreground', function () {
 
     beforeEach(async function () {
       mock = createMock()
-      mock.prepareResponse(initialState)
+      mock.prepareResponse({ __initialState__: initialState })
       link = await createLink<MockState, MockAction>(mock.api)
     })
 
@@ -48,7 +53,26 @@ describe('foreground', function () {
       })
 
       it('should send message containing action to background', async function () {
+        return new Promise((resolve) => {
+          // act
+          dispatch(action)
 
+          // assert
+          setTimeout(() => {
+            const { messages } = mock
+            expect(messages).have.lengthOf(2, 'expected 2 messages')
+            const msg = messages.find(m => m.__action__)
+            expect(msg).have.property('__action__')
+            const { __action__ } = msg
+            expect(__action__).have.property('type', action.type)
+            expect(__action__).have.property('payload')
+            const { payload } = __action__
+            expect(payload).have.property('value', action.payload.value)
+            expect(Object.keys(__action__)).have.lengthOf(2, 'expected action have two keys')
+            expect(Object.keys(payload)).have.lengthOf(1, 'expected payload have single key')
+            resolve()
+          }, 300)
+        })
       })
     })
 
@@ -64,7 +88,14 @@ describe('foreground', function () {
       })
 
       it('is called when state is updated', async function () {
-
+        return new Promise((resolve, reject) => {
+          let called = false
+          subscribe(() => {
+            if (called) reject()
+            setTimeout(() => resolve(), 300)
+          })
+          // TODO: Send message
+        })
       })
     })
 
@@ -85,7 +116,7 @@ describe('foreground', function () {
 
         // assert
         expect(state).be.a('object')
-        expect(state).to.have.property('value', 'hello')
+        expect(state).to.have.property('value', initialState.value)
         expect(state).to.not.have.property('random')
       })
 

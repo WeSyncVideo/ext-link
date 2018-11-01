@@ -1,5 +1,6 @@
 interface Mock {
   api: typeof chrome
+  messages: any[]
   flush (): void
   prepareResponse (r: any): void
   sendMessage (m: any): void
@@ -7,17 +8,19 @@ interface Mock {
 
 function createMock (): Mock {
   let listeners = [] as any[]
+  let messages = [] as any[]
   let response: any
 
   const api = {
     runtime: {
-      sendMessage (_: any, cb: (response: any) => void) {
+      sendMessage (msg: any, cb: (response: any) => void) {
         if (response) {
           setTimeout(() => {
             cb(response)
             response = undefined
           }, 0)
         }
+        messages.push(msg)
       },
       onMessage: {
         addListener (listener: any) {
@@ -34,6 +37,7 @@ function createMock (): Mock {
     api,
     flush () {
       listeners = []
+      messages = []
       response = undefined
     },
     prepareResponse (r: any) {
@@ -43,6 +47,9 @@ function createMock (): Mock {
       setTimeout(() => {
         listeners.forEach(l => l(m))
       }, 0)
+    },
+    get messages () {
+      return messages
     },
   }
 }

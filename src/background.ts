@@ -4,6 +4,16 @@ import { INIT_TYPE, MESSAGE_TYPE, TARGET_FOREGROUND, TARGET_BACKGROUND } from '.
 function createLink <S, A extends Action> (api: API, store: Store<S, A>) {
   const { runtime: { sendMessage, onMessage } } = api
 
+  // Setup store on window for bypass
+  ;(window as any).__store__ = {
+    dispatch: store.dispatch,
+    subscribe: store.subscribe,
+    getState: store.getState,
+    replaceReducer () {
+      throw new Error('store#replaceReducer is not currently a supported operation in ext-link')
+    },
+  }
+
   store.subscribe(() => {
     const state = store.getState()
     sendMessage({
@@ -38,7 +48,6 @@ function createLink <S, A extends Action> (api: API, store: Store<S, A>) {
       default: break
     }
   })
-
 }
 
 export default createLink
