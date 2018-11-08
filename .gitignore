@@ -72,8 +72,8 @@ typings/
 # Serverless directories
 .serverless
 
-# Dist
-dist/
+# Lib
+lib/
 
 # Editor
 .vscode/*
