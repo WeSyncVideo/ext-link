@@ -30,6 +30,9 @@ function createMock (): Mock {
           listeners = listeners.filter(l => l !== listener)
         },
       },
+      getBackgroundPage (fn: Function) {
+        fn(undefined)
+      },
     },
   } as any as typeof chrome
 

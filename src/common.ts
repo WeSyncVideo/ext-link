@@ -1,4 +1,6 @@
-export const MESSAGE_TYPE = 'wesync::ext-link::message'
+export const DISPATCH_TYPE = 'wesync::ext-link::dispatch'
+
+export const SUBSCRIBE_TYPE = 'wesync::ext-link::subscribe'
 
 export const INIT_TYPE = 'wesync::ext-link::init'
 

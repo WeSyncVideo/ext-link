@@ -1,3 +1,5 @@
 --require ts-node/register
 --require jsdom-global/register
 --inspect
+--timeout 2000
+--async-only

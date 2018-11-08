@@ -1,7 +1,8 @@
 import { Store, Action } from 'redux'
 import { expect } from 'chai'
 
-import createLink from '../src/foreground'
+import createForegroundLink from '../src/foreground'
+import { SUBSCRIBE_TYPE, TARGET_FOREGROUND } from '../src/common'
 import createMock, { Mock } from './mock/api'
 
 interface MockState {
@@ -23,8 +24,8 @@ const action = Object.freeze({
 type MockAction = Action
 
 describe('foreground', function () {
-  describe('createLink', function () {
-    expect(createLink).be.a('function')
+  describe('createForegroundLink', function () {
+    expect(createForegroundLink).be.a('function')
   })
 
   describe('link', function () {
@@ -34,7 +35,7 @@ describe('foreground', function () {
     beforeEach(async function () {
       mock = createMock()
       mock.prepareResponse({ __initialState__: initialState })
-      link = await createLink<MockState, MockAction>(mock.api)
+      link = await createForegroundLink<MockState, MockAction>(mock.api)
     })
 
     it('should be an object', async function () {
@@ -92,18 +93,24 @@ describe('foreground', function () {
           let called = false
           subscribe(() => {
             if (called) reject()
+            called = true
             setTimeout(() => resolve(), 300)
           })
-          // TODO: Send message
+          mock.sendMessage({
+            __type__: SUBSCRIBE_TYPE,
+            __target__: TARGET_FOREGROUND,
+            __state__: {},
+          })
         })
       })
     })
 
     describe('getState', function () {
       let getState: typeof link.getState
+      let subscribe: typeof link.subscribe
 
       beforeEach(async function () {
-        ({ getState } = link)
+        ({ getState, subscribe } = link)
       })
 
       it('is function on link', async function () {
@@ -121,7 +128,16 @@ describe('foreground', function () {
       })
 
       it('should retrieve updated state', async function () {
-
+        const updatedState = { value: 'newValue' }
+        subscribe(() => {
+          const state = getState()
+          expect(state).have.property('value', updatedState.value)
+        })
+        mock.sendMessage({
+          __type__: SUBSCRIBE_TYPE,
+          __target__: TARGET_FOREGROUND,
+          __state__: updatedState,
+        })
       })
     })
 
